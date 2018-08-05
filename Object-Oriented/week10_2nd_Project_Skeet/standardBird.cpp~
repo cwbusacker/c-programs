@@ -1,0 +1,27 @@
+#include "standardBird.h"
+StandardBird::StandardBird()
+{
+   BaseBird::BaseBird();
+   StandardBird::draw();
+   startingy = location.getY();
+}
+void StandardBird::awardPoints()
+{
+   drawGamePoints(1);
+}
+void StandardBird::draw()
+{  
+   drawCircle(location, 15);
+}
+void StandardBird::advance()
+{
+   if (startingy >= 0)
+   {
+      setVelocity(random(3, 6), random(-4, 0));
+   }
+   else if (startingy < 0)
+   {
+      setVelocity(random(3, 6), random(0, 4));
+   }
+   flyingObjects::advance(velocity.getDx(), velocity.getDy());
+}
