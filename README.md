@@ -10,3 +10,4 @@ written by professors. The programs that were written by professors will have
 Author: Brother _______ at the top of the program. Otherwise, Author: Chase Busacker
 should be at the top in the header comment.
 
+Also: The madlib project done for CS124 is in the process of being reconstructed. It worked originally, but I edited it to become more readable code. Please disregard its incompleteness.
