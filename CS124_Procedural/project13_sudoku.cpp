@@ -12,15 +12,22 @@
 *      Canceling possible values for values that were in the box
        instead of a row or column.
 ************************************************************************/
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cctype>
+#include <vector>
 using namespace std;
 
 #define ROWS 9
 #define COLS 9
+
+struct RCandPoss
+{
+   unsigned short int r;
+   unsigned short int c;
+   vector <int> possibles;
+};
 
 string getFilename();
 int readFilename(string filename, int board[][COLS]);
@@ -32,6 +39,9 @@ void editSquare(int board[][COLS]);
 string getSaveFilename(string filename);
 void saveFilename(string filename, int board[][COLS]);
 void displayPossibleValues(int board[][COLS]);
+bool solveBoard(int board[][COLS]);
+bool backtrackSolve(int board[][COLS], vector <RCandPoss> markUp);
+void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int columnNum);
 
 
 /**********************************************************************
@@ -136,7 +146,8 @@ void displayInstructions()
    cout << "   ?  Show these instructions\n";
    cout << "   D  Display the board\n";
    cout << "   E  Edit one square\n";
-   cout << "   S  Show the possible values for a square\n";
+   cout << "   P  Show the possible values for a square\n";
+   cout << "   S  Solve this board\n";
    cout << "   Q  Save and Quit\n\n";
 }
 
@@ -213,22 +224,36 @@ void executeCommand(char command, int board[][COLS])
    //edit square because command was an 'E'
    if (command == 'E')
       editSquare(board);
-   
+
    //display the board because the command was a 'D'
    else if (command == 'D')
       displayBoard(board);
-   
+
    //display the instructions because the command was a '?'
    else if (command == '?')
    {
       displayInstructions();
       cout << endl;
    }
-   
+
    //compute the values for a sqaure
-   else if (command == 'S')
+   else if (command == 'P')
       displayPossibleValues(board);
-   
+
+   //Solve the Board
+   else if (command == 'S')
+   {
+      if(solveBoard(board))
+      {
+         cout << "Solve Successful\n";
+         displayBoard(board);
+      }
+      else
+      {
+         cout << "Board UnSolvable\nBoard Solved as far as possible:\n";
+         displayBoard(board);
+      }  
+   }
    //Quit by returning.
    else if (command == 'Q')
       return;
@@ -238,11 +263,202 @@ void executeCommand(char command, int board[][COLS])
       cout << "ERROR: Invalid command" << endl;
 }
 
+bool solveBoard(int board[][COLS])
+{
+   cerr << "SOLVEBOARD" << endl; 
+   displayBoard(board);
+   vector <RCandPoss> markUp;
+   RCandPoss mark;
+   vector <int> possVec;
+   int possibles[9] = {1,2,3,4,5,6,7,8,9};
+   int pause;
+   cin >> pause;
+    
+      for (int r = 0; r < 9; r++)
+      {
+         for (int c = 0; c < 9; c++)
+         {
+	    if(board[r][c] != 0)
+	      continue;
+            possVec.clear();
+            computePossibleValues(board, possibles, r, c);
+            for (int p = 0; p < 9; p++)
+
+               if (possibles[p] != 0)
+               {
+                  possVec.push_back(possibles[p]);
+               }
+               else
+                  possibles[p] = p + 1;
+            if (possVec.size() == 1)
+	    {
+               board[r][c] = possVec[0];
+	       return solveBoard(board);
+               
+            }
+	    else
+            {
+		mark.c = c;
+                mark.r = r;
+                mark.possibles = possVec;
+		markUp.push_back(mark);
+            }
+         }
+      }
+   
+   if (markUp.empty())
+     return true;
+   else
+   {
+     //cout << "After basic algorithm.\n";
+     //displayBoard(board);
+     RCandPoss current;
+     for(int i = 0; i < markUp.size(); i++)  {
+        current = markUp[i];
+	possVec = current.possibles;
+	int j = i;
+        while(j > -1 && markUp[i].r == markUp[j].r)
+           j--;
+        
+        while(current.r == markUp[j + 1].r && !possVec.empty()) {
+        j++;
+        if (j == i)
+        j++;
+        for(int p = 0; p < possVec.size(); p++)
+            for(int q = 0; q < markUp[j].possibles.size(); q++){
+                 if(possVec[p] == markUp[j].possibles[q])
+                     possVec.erase(possVec.begin() + p); } }
+        if(possVec.size() == 1) {
+           board[current.r][current.c] = possVec[0];
+   //        solveBoard(board);
+           return solveBoard(board);
+           
+        }
+        possVec = current.possibles;
+        j = -1;
+        while((j + 1) < markUp.size() && !possVec.empty()) {
+           j++;
+           while(j < (int)markUp.size() && (current.c != markUp[j].c || j == i))
+              j++;
+              if (j == markUp.size())
+                   break;
+              for(int p = 0; p < possVec.size(); p++)
+                  for(int q = 0; q < markUp[j].possibles.size(); q++) { 
+                     if(possVec[p] == markUp[j].possibles[q])
+                         possVec.erase(possVec.begin() + p);
+                  }    }
+	if(possVec.size() == 1){
+  //         cerr << "COL CHANGED IT @" << current.r << current.c << endl;
+           board[current.r][current.c] = possVec[0];
+           return solveBoard(board);
+         }
+
+        
+        possVec = current.possibles;
+        int minR;
+        int maxR;
+        int minC;
+        int maxC;
+        if(current.r < 3)
+        {
+           minR = 0;
+           maxR = 3;
+        }
+        else if (current.r < 6){
+           minR = 3;
+           maxR = 6;
+        }
+        else{
+        minR = 6;
+        maxR = 9;
+        }
+        if (current.c < 3){
+        minC = 0;
+        maxC = 3;
+        }else if (current.c < 6){
+        minC = 3;
+        maxC = 6;
+        }else{
+        minC = 6;
+        maxC = 9;}
+
+        j = 0;
+        //cerr << endl << current.r << ":" << current.c << endl;
+        while(j < markUp.size() && !possVec.empty())
+        {
+        //cerr << "LINE:";
+        
+        while((j < markUp.size() &&  !(markUp[j].r < maxR && markUp[j].r >= minR && markUp[j].c < maxC && markUp[j].c >= minC)) || j == i) j++;
+         if (j == markUp.size())
+           break;
+        //cerr << markUp[j].r << "," << markUp[j].c << endl;
+        for(int p = 0; p < possVec.size(); p++)
+               for(int q = 0; q < markUp[j].possibles.size(); q++)
+		{
+                  if (current.r == 0 && current.c == 1)
+        //              cout << possVec[p] << " = " << markUp[j].possibles[q] << endl;
+                     if(possVec[p] == markUp[j].possibles[q])
+                              possVec.erase(possVec.begin() + p);
+                }
+        j++;
+        }
+        if (possVec.size() == 1){
+        //cerr << "board@" << current.r << current.c << "=?" << possVec[0] << endl;
+        board[current.r][current.c] = possVec[0];
+	if(markUp.size() == 1)
+          return true;
+       
+        }
+   }
+
+  }
+return backtrackSolve(board, markUp);
+}
+void copyBoard(int fromme[][9], int tome[][9])
+{
+for(int r = 0; r < 9; r++)
+   for(int c = 0; c < 9; c++)
+      tome[r][c] = fromme[r][c];
+} 
+
+bool backtrackSolve(int board[][9], vector <RCandPoss> markUp)
+{
+   bool solved;
+   cerr << "BACK SOLVE\n";
+   displayBoard(board);
+   int row, col;
+   cin >> row;
+   int saveBoard[9][9];
+   if(markUp.empty())
+   {
+      cerr << "MARKUP EMPTY!\n";
+      return true;
+   }
+   else
+   {
+   row = markUp[0].r;
+   col = markUp[0].c;
+   }
+   for(int i = 0; i < markUp[0].possibles.size(); i++)
+   {
+   cerr << "LOOPING" << row << col << " = "<< markUp[0].possibles[i] << endl;
+   copyBoard(board, saveBoard);
+   board[row][col] = markUp[0].possibles[i];
+  // markUp.erase(markUp.begin());
+   if(solveBoard(board))
+   {   cerr << "SOLVED!!!"; return true; }
+   cerr << "RESETTING BOARD\n\n";
+   copyBoard(saveBoard, board);
+   }
+ 
+   cerr << "BACK RETURNS FALSE!" <<endl;
+return false;
+}
 /**************************************************************
  * GetCoordinates will get the coordinates from the user
  * and error check to ensure they are correct.
 ***************************************************************/
-void getCoordinates(char coordinates[], int & rowNum, int & columnNum)
+void getCoordinates(char* coordinates, int & rowNum, int & columnNum)
 {
    //set the values of row and column to allow the while loop to run.
    bool valid = false;
@@ -274,7 +490,7 @@ void getCoordinates(char coordinates[], int & rowNum, int & columnNum)
    }   
 }
 
-void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int columnNum)
+void computePossibleValues(int board[][COLS], int* possibles, int rowNum, int columnNum)
 {
    //evaluate rows
    for(int i = 0; i < 9; i++)
@@ -330,6 +546,8 @@ void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int c
    for(topRow; topRow < bottomRow; topRow++)
       for(int lc = leftColumn; lc < rightColumn; lc++)
          possibles[board[topRow][lc] - 1] = 0;
+
+
    
 }
 /**********************************************************************
