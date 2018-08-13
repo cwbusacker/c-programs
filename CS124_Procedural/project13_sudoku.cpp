@@ -103,7 +103,7 @@ string getFilename()
 {
    string filename;
    cout << "Where is your board located? ";
-   cin >> filename;
+   getline(cin, filename);
 
    return filename;
 }
@@ -720,7 +720,7 @@ void editSquare(int board[][COLS])
 string getSaveFilename(string filename)
 {
    cout << "What file would you like to write your board to: ";
-   cin >> filename;
+   getline(cin, filename);
 
    return filename;
 }
