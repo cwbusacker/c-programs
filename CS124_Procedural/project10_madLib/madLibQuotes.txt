@@ -1,0 +1,5 @@
+Quotes without using "the special quote" characters. :!
+Quotes using :< the special quote :> characters. :!
+:< quote one :> :< quote two :> on the same line. :!
+A quote mixed with a :< period :. :> on the end. :!
+A quote next to a :< newline :> :!

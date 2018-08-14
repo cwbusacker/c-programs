@@ -1,0 +1,3 @@
+A period without using the special period character. :!
+A period using the special period character :. :!
+A comma, and another comma :, in one sentence. :!

@@ -1,0 +1,4 @@
+Type, type, type away :! 
+Compile.
+Run.
+Hip hip hooray! :! No errors today! :!

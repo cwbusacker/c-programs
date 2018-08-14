@@ -1,0 +1,5 @@
+One word prompt: :Color :!
+Two word prompt: :Favorite_car :!
+Two prompts on the same line: :First_name :Second_name :!
+Lower-case prompt: :first_president :!
+UPPER-CASE PROMPT: :SECOND_PRESIDENT :!
