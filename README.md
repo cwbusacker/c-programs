@@ -1,6 +1,6 @@
 # cpp-programs
 
-The cpp-programs repository is a compilation of all the c++ programs
+The cpp-programs repository is a compilation of the most significant c++ programs
 that I wrote in CS124 (procedural programming), CS165 (Object-Oriented Programming)
 and CS235 (Data Structures) as well as for personal projects (programs not required 
 for class). Each of these programs are stored in the respective directory.
