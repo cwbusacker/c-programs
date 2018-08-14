@@ -3,11 +3,12 @@
 The cpp-programs repository is a compilation of all the c++ programs
 that I wrote in CS124 (procedural programming), CS165 (Object-Oriented Programming)
 and CS235 (Data Structures) as well as for personal projects (programs not required 
-for class).
+for class). Each of these programs are stored in the respective directory.
 
-Please note that in CS165 and CS235 some of the code that is seen here was
+Please note that in CS165 and CS235 some of the code was
 written by professors. The programs that were written by professors will have
-Author: Brother _______ at the top of the program. Otherwise, Author: Chase Busacker
-should be at the top in the header comment.
 
-Also: The madlib project done for CS124 is in the process of being reconstructed. It worked originally, but I edited it to become more readable code. Please disregard its incompleteness.
+"Author: Brother __________"
+
+at the top of the program. Otherwise, Author: Chase Busacker
+should be at the top in the header comment.
