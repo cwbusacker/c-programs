@@ -197,6 +197,21 @@ char askPlayAgain()
 }
 
 /**********************************************************************
+* sleep will slow down the computer based on the number of seconds passed in.
+***********************************************************************/
+void sleep(int seconds)
+{
+  
+   #ifdef __linux__
+      usleep(seconds * 1000000);
+   #endif
+
+   #ifdef _WIN32
+      Sleep(seconds * 1000);
+   #endif
+}
+
+/**********************************************************************
  * main will run each function in the correct order and end
  * the program if it file fails.
  ***********************************************************************/
@@ -237,13 +252,7 @@ int main()
    
    //Slow down the computer so it doesn't just quit.
    //And the user can see "Thank you for playing."
-   #ifdef __linux__
-   usleep(2000000); 
-   #endif
-   
-   #ifdef _WIN32
-   Sleep(2000);
-   #endif
+   sleep(2);
    
    return 0;
 }

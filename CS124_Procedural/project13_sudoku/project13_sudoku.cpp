@@ -5,12 +5,20 @@
 * Author:
 *    Chase Busacker
 * Summary:
-*    This is the final sudoku game.
+*    Sudoku Game is a program that will run the game of sudoku.
+*    It can do the following:
+
+*      Show the instructions
+*      Display the board
+*      Edit one square
+*      Show the possible values for a square
+*      Solve this board
+*      Write the board to a temporary save file
+*      Revert back to temporary save file
+*      Save and Quit
 *
 *    Estimated:  8.0 hrs
 *    Actual:     16.0 hrs
-*      Canceling possible values for values that were in the box
-       instead of a row or column.
 ************************************************************************/
 #include <iostream>
 #include <fstream>
@@ -33,15 +41,16 @@ int readFilename(string filename, int board[][COLS]);
 void displayInstructions();
 void displayBoard(int board[][COLS]);
 char getInstructions();
-void executeCommand(char command, int board[][COLS]);
+void executeCommand(char command, int board[][COLS], int saved[][COLS], bool & isSaved);
 void editSquare(int board[][COLS]);
 string getSaveFilename(string filename);
 void saveFilename(string filename, int board[][COLS]);
 void displayPossibleValues(int board[][COLS]);
-bool solveBoard(int board[][COLS]);
-bool backtrackSolve(int board[][COLS], vector <RCandPoss> markUp);
+void solveBoard(int board[][COLS], int & numSolutions);
+void backtrackSolve(int board[][COLS], vector <RCandPoss> markUp, int & numSolutions);
 void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int columnNum);
 void getBoxRange(int row, int col, int & minR, int & maxR, int & minC, int & maxC);
+void copyBoard(int fromme[][COLS], int tome[][COLS]);
 
 
 /**********************************************************************
@@ -53,9 +62,11 @@ int main()
 {
    //variable declarations
    int board[ROWS][COLS];
+   int saved[ROWS][COLS];
    int readtest;
    string filename;
    char command;
+   bool isSaved = false;
 
    //read the file and if it fails, make the user enter it again.
    do
@@ -63,7 +74,9 @@ int main()
       filename = getFilename();
       readtest = readFilename(filename, board);
       if (readtest == -1)
+      {
          cout << "ERROR: Invalid Filename" << endl;
+      }
    } while (readtest == -1);
 
    //Show the board and instructions when the game first starts
@@ -74,7 +87,7 @@ int main()
    do
    {
       command = getInstructions();
-      executeCommand(command, board);
+      executeCommand(command, board, saved, isSaved);
    } while (command != 'Q');
 
    //Get the new file name the user would like to save the board to. 
@@ -82,11 +95,15 @@ int main()
    {
       cout << "Would you like to save the board in the same location(y/n)? ";
       cin >> command;
-
+      command = tolower(command);
       if (command == 'n')
+      {
          filename = getSaveFilename(filename);
+      }
       else if (command != 'y')
+      {
          cout << "Invalid command. Please try again.\n";
+      }
    } while (!(command == 'y' || command == 'n'));
 
    //save the board to the filename.
@@ -119,8 +136,9 @@ int readFilename(string filename, int board[][COLS])
    fin.open(filename.c_str());
 
    if (fin.fail())
+   {
       return -1;
-
+   }
    for (int r = 0; r < ROWS; r++)
    {
       for (int c = 0; c < COLS; c++)
@@ -184,6 +202,8 @@ void displayInstructions()
    cout << "   E  Edit one square\n";
    cout << "   P  Show the possible values for a square\n";
    cout << "   S  Solve this board\n";
+   cout << "   W  Write the board to a temporary save file\n";
+   cout << "   R  Revert back to temporary save file\n";
    cout << "   Q  Save and Quit\n\n";
 }
 
@@ -200,28 +220,37 @@ void displayBoard(int board[][COLS]) {
       for (int c = 0; c < COLS; c++)
       {
          //NUMBERS NOT ZERO
-
-         //right before a gridline
-         //therefore, just display the number (gridline placement)
-         if ((board[r][c] != 0) && (c == 2 || c == 5 || c == 8))
-            cout << board[r][c];
-         //not before a gridline
-         //display the number AND a space
-         else if (board[r][c] != 0 && c != 2 && c != 5)
-            cout << board[r][c] << " ";
-
-
-
+         if (board[r][c] != 0)
+         {
+            //right before a gridline
+            //therefore, just display the number (gridline placement)
+            if (c == 2 || c == 5 || c == 8)
+            {
+               cout << board[r][c];
+            }
+            //not before a gridline
+            //display the number AND a space
+            else if ( c != 2 && c != 5)
+            {
+               cout << board[r][c] << " ";
+            }
+         }
          //NUMBER IS 0 (meaning blank space on the board)
-
-         //right before a gridline
-         //display a single space
-         else if (board[r][c] == 0 && (c == 2 || c == 5 || c == 8))
-            cout << " ";
-         //not before a gridline
-         //display a double space
-         else if (board[r][c] == 0 && c != 2 && c != 5)
-            cout << "  ";
+         else
+         {
+            //right before a gridline
+            //display a single space
+            if (c == 2 || c == 5 || c == 8)
+            {
+               cout << " ";
+            }
+            //not before a gridline
+            //display a double space
+            else if (c != 2 && c != 5)
+            {
+               cout << "  ";
+            }
+         }
 
          //anytime there is a column of 3 or 6 display a |
          if (c != COLS - 1 && c == 2 || c == 5)
@@ -255,7 +284,7 @@ char getInstructions()
  * executeCommand will read the command given and tell a function to
  * run depending on the command given.
  ***********************************************************************/
-void executeCommand(char command, int board[][COLS])
+void executeCommand(char command, int board[][COLS], int saved[][COLS], bool & isSaved)
 {
    //edit square because command was an 'E'
    if (command == 'E')
@@ -279,26 +308,57 @@ void executeCommand(char command, int board[][COLS])
    //Solve the Board
    else if (command == 'S')
    {
+      int numSolutions = 0;
+   
+      copyBoard(board, saved);
+      solveBoard(board, numSolutions);
       //attempt to solve the board.
-      if (solveBoard(board))
+      if (numSolutions == 1)
       {
-         cout << "Solve Successful\n";
+         cout << "\nSolve Successful\n";
          displayBoard(board);
       }
       //if it could not be solved, then the board is unsolvable.
+      else if(numSolutions == 0)
+      {
+         copyBoard(saved, board);
+         cout << "\nInvalid board. No Solutions.\n";
+      }
       else
       {
-         cout << "Board UnSolvable\nBoard Solved as far as possible:\n";
-         displayBoard(board);
+         copyBoard(saved, board);
+         cout << "\nInvalid Board. Multiple Solutions.\n";
       }
+      
+   }
+   else if (command == 'R')
+   {
+      if (isSaved)
+      {
+         copyBoard(saved, board);
+         cout << "\nReverted Successfully\n";
+      }
+      else
+      {
+         cout << "\nERROR: No Saved Board.\n";
+      }
+   }
+   else if (command == 'W')
+   {
+      copyBoard(board, saved);
+      cout << "\nTemporary Save Successfully\n";
+      isSaved = true;
    }
    //Quit by returning.
    else if (command == 'Q')
+   {
       return;
-
+   }
    //uh oh! Invalid command. User must try again.
    else
+   {
       cout << "ERROR: Invalid command" << endl;
+   }
 }
 
 /**********************************************************************
@@ -319,8 +379,13 @@ void executeCommand(char command, int board[][COLS])
 * each empty square, and those values will change each time an edit takes
 * place.
 ***********************************************************************/
-bool solveBoard(int board[][COLS])
+void solveBoard(int board[][COLS], int & numSolutions)
 {
+   //Making sure there is not more than 1 solution.
+   if (numSolutions > 1)
+   {
+      return;
+   }
    vector <RCandPoss> markUp; //A "Markup" Of the board (A list of coordinates and their possible values.
    RCandPoss mark; //a mark in one square
    vector <int> possVec; //vector of possible values in a square (depending on the case)
@@ -335,7 +400,9 @@ bool solveBoard(int board[][COLS])
       {
          //if the row and column already has a value, move on to the next column or row.
          if (board[r][c] != 0)
+         {
             continue;
+         }
          //possVec needs to clear before we start building the possible values for this square.
          possVec.clear();
 
@@ -360,7 +427,8 @@ bool solveBoard(int board[][COLS])
          if (possVec.size() == 1)
          {
             board[r][c] = possVec[0];
-            return solveBoard(board);
+            solveBoard(board, numSolutions);
+            return;
 
          }
 
@@ -378,8 +446,10 @@ bool solveBoard(int board[][COLS])
    //If the markUp is empty, that means we didn't have any coordinates
    //that needed filled, the board is solved.
    if (markUp.empty())
-      return true;
-
+   {
+      numSolutions += 1;
+      return;
+   }
    //More complex algorithm looping through the whole markup
    for (unsigned int i = 0; i < markUp.size(); i++)
    {
@@ -430,7 +500,8 @@ bool solveBoard(int board[][COLS])
       if (possVec.size() == 1)
       {
          board[mark.r][mark.c] = possVec[0];
-         return solveBoard(board);
+         solveBoard(board, numSolutions);
+         return;
       }
 
       /***********  SECTION 3: UNIQUE CANDIDATE IN COLUMN ***********
@@ -478,7 +549,8 @@ bool solveBoard(int board[][COLS])
       if (possVec.size() == 1)
       {
          board[mark.r][mark.c] = possVec[0];
-         return solveBoard(board);
+         solveBoard(board, numSolutions);
+         return; 
       }
       /***********  SECTION 4: UNIQUE CANDIDATE IN BOX ***********
       ************************************************************/
@@ -531,24 +603,30 @@ bool solveBoard(int board[][COLS])
       if (possVec.size() == 1)
       {
          board[mark.r][mark.c] = possVec[0];
-         return solveBoard(board);
+         solveBoard(board, numSolutions);
+         return;
       }
    }
    //If the for loop has been exited, then it has been solved as far as possible 
    //without more complex algorithms. The board is still not solved, so we must 
    //use backtracking to solve.
-   return true;// backtrackSolve(board, markUp);
+   backtrackSolve(board, markUp, numSolutions);
+   return; 
 }
 
 /**********************************************************************
 * copyBoard will copy the two dimensional arrays that are sent it
 * as parameters and copy their values.
 ***********************************************************************/
-void copyBoard(int fromme[][9], int tome[][9])
+void copyBoard(int fromme[][COLS], int tome[][COLS])
 {
    for (int r = 0; r < 9; r++)
+   {
       for (int c = 0; c < 9; c++)
+      {
          tome[r][c] = fromme[r][c];
+      }
+   }
 }
 
 
@@ -557,39 +635,53 @@ void copyBoard(int fromme[][9], int tome[][9])
 * see if solveBoard can solve it with that value. If it can't it
 * will set the board back to the original value before it was changed.
 ***********************************************************************/
-bool backtrackSolve(int board[][COLS], vector <RCandPoss> markUp)
+void backtrackSolve(int board[][COLS], vector <RCandPoss> markUp, int & numSolutions)
 {
+   if (numSolutions > 1)
+   {
+      return;
+   }
    //we are only concerned about 1 square, recursion will take care of
    //the others. 
    //So declare the saveBoard and initialize the row and col integers.
+   //We will save solved board to copy back to board if there is only one solution.
    int saveBoard[9][9];
+   int solvedBoard[9][9];
    int row = markUp[0].r;
    int col = markUp[0].c;
-
+   int before;
    //loop through the possible values allowed for this square.
    for (unsigned int i = 0; i < markUp[0].possibles.size(); i++)
    {
       //make a copy of the current board so we can revert back to where 
       //we are if necessary.
       copyBoard(board, saveBoard);
-
+      
       //edit the square with the current possible value.
       board[row][col] = markUp[0].possibles[i];
+      
 
       //check if solveBoard can solve it with the value in that position
-      if (solveBoard(board))
+      before = numSolutions;
+      solveBoard(board, numSolutions);
+      if (before + 1 == numSolutions)
       {
-         return true;
+         copyBoard(board, solvedBoard);
       }
-      
+      if (numSolutions > 1)
+      {
+         return;
+      }
       //it didn't work, reset the board back and try the next value.
       copyBoard(saveBoard, board);
    }
-
-   //if we've tried all the values and we still cannot solve,
-   //then the board isn't solvable.
-   //so we return false.
-   return false;
+   
+   //Since there was only one solution, we can copy it over to the board.
+   if (numSolutions == 1)
+   {
+      copyBoard(solvedBoard, board);
+   }
+   return;
 }
 
 /**************************************************************
@@ -639,13 +731,21 @@ void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int c
 {
    //evaluate rows
    for (int i = 0; i < 9; i++)
+   {
       if (board[rowNum][i] != 0)
+      {
          possibles[board[rowNum][i] - 1] = 0;
+      }
+   }
 
    //evaluate columns
    for (int i = 0; i < 9; i++)
+   {
       if (board[i][columnNum] != 0)
+      {
          possibles[board[i][columnNum] - 1] = 0;
+      }
+   }
 
    //Sudoku BOX boundaries.
    int topRow;
@@ -654,14 +754,19 @@ void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int c
    int rightColumn;
 
    //determine the sudoku BOX row boundaries
-   getBoxRange(rowNum, columnNum, bottomRow, topRow, leftColumn, rightColumn);
+   getBoxRange(rowNum, columnNum, topRow, bottomRow, leftColumn, rightColumn);
   
    //remove values if in sudoku BOX
    for (topRow; topRow < bottomRow; topRow++)
+   {
       for (int lc = leftColumn; lc < rightColumn; lc++)
+      {
          if (board[topRow][lc] != 0)
+         {
             possibles[board[topRow][lc] - 1] = 0;
-
+         }
+      }
+   }
 
 
 }
@@ -674,10 +779,11 @@ void computePossibleValues(int board[][COLS], int possibles[], int rowNum, int c
 void editSquare(int board[][COLS])
 {
    //Get Coordinates for square to edit
-   char coordinates[2];
+   char coordinates[3];
    int columnnum;
    int rownum;
    getCoordinates(coordinates, rownum, columnnum);
+   coordinates[2] = 0;
 
    //If the coordinate is filled, tell the user and return to get the next command    
    if (board[rownum][columnnum] != 0)
@@ -780,7 +886,9 @@ void displayPossibleValues(int board[][COLS])
                first = false;
             }
             else
+            {
                cout << ", " << possiblenums[i];
+            }
          }
       }
       cout << endl << endl;
@@ -788,5 +896,7 @@ void displayPossibleValues(int board[][COLS])
 
    //if the square is filled, alert the user.
    else
+   {
       cout << "ERROR: Square \'" << coordinates << "\' is filled\n\n";
+   }
 }
