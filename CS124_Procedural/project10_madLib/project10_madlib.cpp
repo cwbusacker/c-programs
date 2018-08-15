@@ -201,11 +201,14 @@ char askPlayAgain()
 ***********************************************************************/
 void sleep(int seconds)
 {
-  
+  //for linux multiply the seconds times 1,000,000
+   //since usleep takes microseconds as a parameter.
    #ifdef __linux__
       usleep(seconds * 1000000);
    #endif
 
+   //windows takes milliseconds as a parameter.
+   //so multiply seconds by 1000.
    #ifdef _WIN32
       Sleep(seconds * 1000);
    #endif
