@@ -34,6 +34,8 @@ public:
    float getClosestDistance(const flyingObjects &obj1, const flyingObjects &obj2) const;
    void nextLevel();
    void gameOver();
+   bool gameover;
+   bool playAgain;
    void makeRockDebris(Rock &rock);
 
 private:
@@ -46,7 +48,7 @@ private:
    int lives;
    int hyperSpaceuses;
    int gamelevel;
-   bool gameover;
+   
    int lifeawardcount;
    int pause;
    vector <Debris*> debris;

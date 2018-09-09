@@ -10,6 +10,11 @@
 #include "game.h"
 #include "uiInteract.h"
 
+
+Point topLeft(-200, 200);
+Point bottomRight(200, -200);
+Interface ui(0, NULL, "Asteroids", topLeft, bottomRight);
+
 /*************************************
  * All the interesting work happens here, when
  * I get called back from OpenGL to draw a frame.
@@ -24,6 +29,15 @@ void callBack(const Interface *pUI, void *p)
    pGame->advance();
    pGame->handleInput(*pUI);
    pGame->draw(*pUI);
+
+   if(pGame->gameover && pGame->playAgain)
+   {
+      delete pGame;
+      pGame = new Game(topLeft, bottomRight);
+      ui.run(callBack, pGame);
+   }
+
+
 }
 
 
@@ -34,11 +48,8 @@ void callBack(const Interface *pUI, void *p)
  *********************************/
 int main(int argc, char ** argv)
 {
-   Point topLeft(-200, 200);
-   Point bottomRight(200, -200);
-   Interface ui(argc, argv, "Asteroids", topLeft, bottomRight);
-   Game game(topLeft, bottomRight);
-   ui.run(callBack, &game);
+   Game * game = new Game(topLeft, bottomRight);
+   ui.run(callBack, game);
    
    return 0;
 }

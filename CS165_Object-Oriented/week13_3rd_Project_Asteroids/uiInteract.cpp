@@ -175,6 +175,12 @@ void Interface::keyEvent(int key, bool fDown)
    case 'h':
       isHPress = fDown;
       break;
+   case 'y':
+      isYPress = fDown;
+      break;
+   case 'n': 
+      isNPress = fDown;
+      break;
    case GLUT_KEY_HOME:
    case ' ':
       isSpacePress = fDown;
@@ -199,6 +205,10 @@ void Interface::keyEvent()
       isRightPress++;
    if (isHPress)
       isHPress = 0;
+   if (isYPress)
+      isYPress = 0;
+   if (isNPress)
+      isNPress = 0;
    isSpacePress = false;
 }
 
@@ -245,6 +255,8 @@ int          Interface::isUpPress    = 0;
 int          Interface::isLeftPress  = 0;
 int          Interface::isRightPress = 0;
 int          Interface::isHPress     = 0;
+int          Interface::isNPress     = 0;
+int          Interface::isYPress     = 0;
 bool         Interface::isSpacePress = false;
 bool         Interface::initialized  = false;
 double       Interface::timePeriod   = 1.0 / 30; // default to 30 frames/second

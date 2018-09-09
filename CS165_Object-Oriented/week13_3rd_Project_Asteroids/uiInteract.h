@@ -70,6 +70,8 @@ public:
    int  isLeft()      const { return isLeftPress;  };
    int  isRight()     const { return isRightPress; };
    int  isH()         const { return isHPress;     };
+   int  isY()         const { return isYPress;     };
+   int  isN()         const { return isNPress;     };
    bool isSpace()     const { return isSpacePress; };
    
    static void *p;                   // for client
@@ -87,6 +89,8 @@ private:
    static int  isLeftPress;          //    "   left       "
    static int  isRightPress;         //    "   right      "
    static int  isHPress;             //    "    H key     "
+   static int  isYPress;
+   static int  isNPress;
    static bool isSpacePress;         //    "   space      "
 };
 

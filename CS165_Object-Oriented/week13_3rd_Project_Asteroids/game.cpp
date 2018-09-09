@@ -22,7 +22,7 @@ using namespace std;
 *************************************************************/
 Game::Game(Point tl, Point br): topLeft (tl), bottomRight(br)
 {
-
+   
    //All games start with level 1.
    gamelevel = 1;                 
 
@@ -50,13 +50,13 @@ Game::Game(Point tl, Point br): topLeft (tl), bottomRight(br)
    //The Game just started. SO obviously the game isn't over.
    //This will become true if lives goes to zero. Written later in code.
       gameover = false;
+      playAgain = false; //initialize to false, will change to true if game ends.
 
    //lifeawardcount. This is used in awarding lives every 5000 points earned.
       lifeawardcount = 0;
-      
      
-   
 }
+
 /************************************************************
  * Function: cleanUpZombies
  * Purpose: Delete Bullets that are no longer being drawn.
@@ -197,8 +197,19 @@ void Game::handleInput(const Interface & ui)
          hyperSpaceuses -= 1;
       }
    }
-   
+ 
+   if (ui.isY() && pause > 71)
+   {
+      playAgain = true;
+   }
+   else if (ui.isN() && pause > 71)
+   {
+      exit(0);
+   }
 }
+   
+
+
 
 /************************************************************
  * Function: draw
@@ -286,6 +297,8 @@ void Game::draw(const Interface & ui)
       {
          Point center(-55, 0);
          drawTextLarge(center, "GAME OVER");
+         Point belowCenter(-55, -15);
+         drawText(belowCenter, "Play again(y/n)?");
          
          int i = 0;
          while (i < debris.size())
@@ -293,8 +306,8 @@ void Game::draw(const Interface & ui)
             delete debris[i];
             debris.erase(debris.begin());
          }
-         
       }
+     
       pause += 1;
    }
 }
@@ -329,6 +342,7 @@ void Game::gameOver()
       pause = 0; //the frame counter must start at 0
                  //to determine when to draw certain items.
    }
+
   
    
 
