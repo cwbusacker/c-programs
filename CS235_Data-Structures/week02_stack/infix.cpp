@@ -64,18 +64,9 @@ string convertInfixToPostfix(const string & infix)
             {
                while (operators.top() == '*' || operators.top() == '/' || operators.top() == '^')
                {
-                  if (operators.top() == '^')
-                  {
-                     postfix += operators.top();
-                     operators.pop();
-                     postfix += ' ';
-                  }
-                  else if (operators.top() == '*' || operators.top() == '/')
-                  {
-                     postfix += operators.top();
-                     operators.pop();
-                     postfix += ' ';
-                  }
+                  postfix += operators.top();
+                  operators.pop();
+                  postfix += ' ';         
                }
                operators.push(infix[i]);
             }
