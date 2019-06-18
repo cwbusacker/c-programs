@@ -43,28 +43,26 @@ void getFileName(char filename[])
 /**********************************************************************
  * askQuestions will ask questions to the user to get input into the array.
  ***********************************************************************/
-void askQuestions(char words[][32], int numwords)
+void askQuestions(char question[])
 {
    //loop through the words
-   for (int i = 0; i < numwords ; i++)
-   {
-      //If the word is a question, then it will start with a colon and then an alpha character
-      if (words[i][0] == ':' && isalpha(words[i][1]))
+   //If the word is a question, then it will start with a colon and then an alpha character
+      if (question[0] == ':' && isalpha(question[1]))
       {
          //First letter uppercase.
-         cout << "\t" << (char)toupper(words[i][1]);
-         for (int j = 2; words [i][j] != 0; j++)
+         cout << "\t" << (char)toupper(question[1]);
+         for (int j = 2; question[j] != 0; j++)
          {
             //Lowercase all other words and transform underscore to a space.
-            if (words[i][j] != '_')
-               cout << (char)tolower(words[i][j]);
+            if (question[j] != '_')
+               cout << (char)tolower(question[j]);
             else
                cout << ' ';
          }
          //Output a colon and then save the word in the place
          //of the question.
          cout << ": ";
-         cin.getline(words[i], 32);
+         cin.getline(question, 32);
       }
    }
 }
@@ -73,7 +71,7 @@ void askQuestions(char words[][32], int numwords)
 /**********************************************************************
 * readFilename will read the file into an array.
 ***********************************************************************/
-int readFilename(char filename[], char words[][32])
+int readFile(char filename[], char words[][32])
 {
    ifstream fin;
    fin.open(filename);
@@ -85,7 +83,11 @@ int readFilename(char filename[], char words[][32])
    int wordcount = 0;
    
    while (fin >> words[wordcount])
+   {
+      askQuestion(words[wordcount]);
       wordcount++;
+   }
+     
 
    fin.close();
 
@@ -231,7 +233,7 @@ int main()
    {
       //request the Filename and read it
       getFileName(filename);
-      numWords = readFilename(filename, words);
+      numWords = readFile(filename, words);
 
       //If the filename was invalid, try again.
       if (numWords == -1)
@@ -243,7 +245,6 @@ int main()
       }
 
       //Run the program by asking for the special words, displaying the words, and asking to play again.
-      askQuestions(words, numWords);
       cout << endl;
       Display(words, numWords);
       cout << endl;
