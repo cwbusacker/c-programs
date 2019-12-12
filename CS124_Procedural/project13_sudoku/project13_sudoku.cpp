@@ -157,39 +157,10 @@ int readFilename(string filename, int board[][COLS])
 ***************************************************************/
 void getBoxRange(const int row, const int col, int & minR, int & maxR, int & minC, int & maxC)
 {
-   //edit max and min row
-   if (row < 3)
-   {
-      minR = 0;
-      maxR = 3;
-   }
-   else if (row < 6)
-   {
-      minR = 3;
-      maxR = 6;
-   }
-   else
-   {
-      minR = 6;
-      maxR = 9;
-   }
-
-   //edit max and min column.
-   if (col < 3)
-   {
-      minC = 0;
-      maxC = 3;
-   }
-   else if (col < 6)
-   {
-      minC = 3;
-      maxC = 6;
-   }
-   else
-   {
-      minC = 6;
-      maxC = 9;
-   }
+   minR = row / 3 * 3;
+   maxR = row / 3 * 3 + 3;
+   minC = col / 3 * 3;
+   maxC = col / 3 * 3 + 3;
 }
 /**********************************************************************
  * displayInstructions displays the instructions to the user.
